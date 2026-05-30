@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -361,11 +360,11 @@ canvas#videoCanvas {
     <div class="form-row">
       <label>Video Duration</label>
       <select id="duration">
-        <option value="1">~1 Minute (15 scenes)</option>
-        <option value="2">~2 Minutes (18 scenes)</option>
-        <option value="3" selected>~3 Minutes (20 scenes)</option>
-        <option value="5">~5 Minutes (25 scenes)</option>
-        <option value="8">~8 Minutes (35 scenes)</option>
+        <option value="1">~1 Minute (150 words • 10 cuts)</option>
+        <option value="2">~2 Minutes (300 words • 18 cuts)</option>
+        <option value="3" selected>~3 Minutes (450 words • 25 cuts)</option>
+        <option value="5">~5 Minutes (750 words • 42 cuts)</option>
+        <option value="8">~8 Minutes (1200 words • 60 cuts)</option>
       </select>
     </div>
   </div>
@@ -390,6 +389,26 @@ canvas#videoCanvas {
     <input type="text" id="channelName" placeholder="e.g. TechWithRaj, MyChannel..." />
   </div>
 
+  <div class="form-row">
+    <label>🎣 Hook Type (Pehle 3 Second)</label>
+    <select id="hookType">
+      <option value="question">❓ Question Hook — "Kya tumhe pata hai...?"</option>
+      <option value="shock">😱 Shock Hook — Surprising fact se shuru</option>
+      <option value="challenge">💪 Challenge Hook — "Yeh karo aur result dekho"</option>
+      <option value="fear">😰 Fear Hook — "Agar yeh nahi jaana toh..."</option>
+      <option value="auto">🤖 AI Choose Kare (Best for topic)</option>
+    </select>
+  </div>
+
+  <div class="form-row">
+    <label>🎙️ Voice Style (Script tone ke liye)</label>
+    <select id="voiceStyle">
+      <option value="energetic">⚡ Energetic & Confident — Tech, Motivation</option>
+      <option value="calm">🧘 Calm & Clear — Education, Finance</option>
+      <option value="friendly">😊 Friendly & Casual — Vlog, Entertainment</option>
+    </select>
+  </div>
+
   <div class="btn-row">
     <button class="btn btn-accent" id="genScriptBtn" onclick="generateScript()">✨ Generate Script</button>
   </div>
@@ -402,6 +421,51 @@ canvas#videoCanvas {
       <button class="btn btn-ghost" style="padding:6px 14px;font-size:13px;" onclick="goStep(2)">Next: Voiceover →</button>
     </div>
     <div class="scene-list" id="sceneList"></div>
+  </div>
+
+  <!-- YouTube Tips Quick Guide -->
+  <div style="margin-top:28px;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+    <div style="padding:14px 20px;border-bottom:1px solid var(--border);font-weight:700;font-size:14px;color:var(--accent);">
+      📚 YouTube Pro Tips (Quick Reference)
+    </div>
+    <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--muted2);margin-bottom:8px;text-transform:uppercase;">🎣 Hook Types</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8;">
+          ❓ Question: "Kya tumhe pata hai...?"<br>
+          😱 Shock: Surprising fact/number<br>
+          💪 Challenge: "Yeh karo 7 din mein"<br>
+          😰 Fear: "Agar yeh nahi jaana..."
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--muted2);margin-bottom:8px;text-transform:uppercase;">✂️ Cuts Per Video</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8;">
+          1 min → 10 cuts<br>
+          2 min → 18 cuts<br>
+          5 min → 42 cuts<br>
+          Har 4-6 sec pe change karo
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--muted2);margin-bottom:8px;text-transform:uppercase;">📝 Script Words</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8;">
+          1 min → 130-150 words<br>
+          2 min → 260-300 words<br>
+          5 min → 650-750 words<br>
+          Speed: 140 words/min
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--muted2);margin-bottom:8px;text-transform:uppercase;">🚀 Algorithm Tips</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8;">
+          First 30 sec viewer rok lo<br>
+          Title mein keyword zaroori<br>
+          Tags: sirf 5-8 kafi hain<br>
+          80% log bina sound dekhte
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -420,10 +484,10 @@ canvas#videoCanvas {
     </div>
     <div class="grid2" style="margin-top:16px;">
       <div class="form-row">
-        <label>Speed</label>
-        <input type="range" id="rateSlider" min="0.7" max="1.5" step="0.05" value="0.95"
+        <label>Speed (Best: 1.0x - 1.2x)</label>
+        <input type="range" id="rateSlider" min="0.7" max="1.5" step="0.05" value="1.1"
           style="width:100%;accent-color:var(--accent);" oninput="document.getElementById('rateVal').textContent=this.value">
-        <div style="font-size:12px;color:var(--muted2);margin-top:4px;">Speed: <span id="rateVal">0.95</span>x</div>
+        <div style="font-size:12px;color:var(--muted2);margin-top:4px;">Speed: <span id="rateVal">1.1</span>x &nbsp;🟢 1.0-1.2x recommended</div>
       </div>
       <div class="form-row">
         <label>Pitch</label>
@@ -489,9 +553,10 @@ canvas#videoCanvas {
     </div>
     <div style="margin-top:12px;display:flex;align-items:center;gap:12px;">
       <label style="font-size:13px;color:var(--muted2);">Music Volume</label>
-      <input type="range" id="musicVolSlider" min="0" max="100" value="30" style="flex:1;accent-color:var(--accent);" oninput="document.getElementById('musicVolVal').textContent=this.value+'%'">
-      <span id="musicVolVal" style="font-size:13px;color:var(--accent);width:36px;">30%</span>
+      <input type="range" id="musicVolSlider" min="0" max="100" value="18" style="flex:1;accent-color:var(--accent);" oninput="document.getElementById('musicVolVal').textContent=this.value+'%'">
+      <span id="musicVolVal" style="font-size:13px;color:var(--accent);width:36px;">18%</span>
     </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:5px;">🟢 15-20% best hai — voice clear sunai degi, music distract nahi karega</div>
   </div>
 
   <div class="setting-card" style="margin-bottom:20px;">
@@ -622,41 +687,86 @@ async function generateScript() {
   const topic = document.getElementById('topic').value.trim();
   if (!topic) { toast('Topic daalo pehle!', 'err'); return; }
 
-  const lang = document.getElementById('lang').value;
-  const dur = document.getElementById('duration').value;
-  const style = document.getElementById('style').value;
+  const lang      = document.getElementById('lang').value;
+  const dur       = parseInt(document.getElementById('duration').value);
+  const style     = document.getElementById('style').value;
   const channelName = document.getElementById('channelName').value.trim() || 'Hamara Channel';
-  const sceneMap = { '1': 15, '2': 18, '3': 20, '5': 25, '8': 35 };
-  const numScenes = sceneMap[dur] || 20;
-  const secPerScene = Math.round((parseInt(dur) * 60) / numScenes);
+  const hookType  = document.getElementById('hookType').value;
+  const voiceStyle = document.getElementById('voiceStyle').value;
 
-  setStatus('p1status', `⏳ Script generate ho rahi hai... (${numScenes} scenes)`);
+  // Research-based calculations
+  const wordsPerMin = 140; // avg speaking speed
+  const totalWords  = dur * wordsPerMin;
+  // cuts: 1min=10, 2min=18, 3min=25, 5min=42, 8min=60
+  const cutsMap = { 1: 10, 2: 18, 3: 25, 5: 42, 8: 60 };
+  const numScenes = cutsMap[dur] || Math.round(dur * 8);
+  const wordsPerScene = Math.round(totalWords / numScenes);
+  const secPerScene = Math.round((dur * 60) / numScenes);
+
+  const hookInstructions = {
+    question:  'Start with a direct question like "Kya tumhe pata hai...?" that makes viewer curious',
+    shock:     'Start with a shocking/surprising fact or number that stops the viewer instantly',
+    challenge: 'Start with a bold challenge like "Yeh karo aur 7 din mein result dekho"',
+    fear:      'Start with a fear/warning like "Agar yeh nahi jaana toh bahut pachtaoge"',
+    auto:      'Choose the BEST hook type for this specific topic automatically'
+  };
+
+  const voiceToneMap = {
+    energetic: 'Write in an energetic, confident, punchy tone. Short sentences. High energy.',
+    calm:      'Write in a calm, clear, informative tone. Measured pace. Professional.',
+    friendly:  'Write in a friendly, casual, conversational tone. Like talking to a friend.'
+  };
+
+  setStatus('p1status', `⏳ Script likh raha hoon... (~${totalWords} words, ${numScenes} scenes)`);
   setProgress('p1fill', 10);
   document.getElementById('genScriptBtn').disabled = true;
   document.getElementById('scriptContainer').style.display = 'none';
 
-  const prompt = `You are a professional YouTube scriptwriter. Create a ${dur}-minute ${style} video script in ${lang} for: "${topic}".
+  const prompt = `You are an expert YouTube scriptwriter. Write a ${dur}-minute ${style} video script in ${lang}.
 
-STRICT RULES:
-1. Create EXACTLY ${numScenes} scenes total
-2. Scene 1 = STRONG HOOK (shocking fact, bold question, or surprising statement to grab attention in 3 seconds)
-3. Scenes 2 to ${numScenes - 2} = Main engaging content, on-topic
-4. Scene ${numScenes - 1} = Wrap-up / Key takeaway
-5. Scene ${numScenes} = CALL TO ACTION: motivate viewers to Like, Share, Subscribe to "${channelName}" and press Bell icon
-6. Each narration = 2-3 sentences (~${secPerScene} seconds when read aloud)
-7. Narration in ${lang}. Visual description in English only.
+TOPIC: "${topic}"
+CHANNEL: "${channelName}"
 
-Return ONLY valid JSON (no markdown, no extra text):
+SCRIPT RULES (MUST FOLLOW):
+1. Total words: ~${totalWords} words (${wordsPerMin} words/minute speaking speed)
+2. Total scenes: EXACTLY ${numScenes} scenes
+3. Each scene narration: ~${wordsPerScene} words (~${secPerScene} seconds)
+4. Tone: ${voiceToneMap[voiceStyle]}
+
+STRUCTURE:
+- Scene 1 (HOOK): ${hookInstructions[hookType]}. Formula: Problem → Promise → Preview. MUST hook in 3 seconds!
+- Scenes 2-${Math.floor(numScenes * 0.15)}: Introduction & context
+- Scenes ${Math.floor(numScenes * 0.15)+1}-${numScenes - 3}: Main content (engaging, value-packed)
+- Scene ${numScenes - 2}: Key takeaway / summary
+- Scene ${numScenes - 1}: Encourage viewers — "Yeh video apne dosto ko share karo!"
+- Scene ${numScenes} (CTA): "Agar yeh video useful laga to LIKE karo, ${channelName} ko SUBSCRIBE karo, aur Bell icon dabao taaki koi video miss na ho!"
+
+EDITING NOTES (add as visual hints):
+- Every 4-6 seconds scene change
+- Important points pe zoom in suggestion
+- Text on screen for key facts
+- B-roll suggestions where relevant
+
+Return ONLY valid JSON (no markdown, no backticks):
 {
-  "title": "Catchy YouTube video title",
+  "title": "SEO-friendly catchy YouTube title with keyword",
+  "description": "First 2 lines with main keyword for YouTube description",
+  "tags": ["tag1","tag2","tag3","tag4","tag5"],
   "scenes": [
-    { "scene": 1, "type": "hook", "narration": "...", "visual": "..." }
+    {
+      "scene": 1,
+      "type": "hook",
+      "narration": "Exact script in ${lang}",
+      "visual": "Visual/B-roll description in English",
+      "editing": "Jump cut / Zoom in / Text overlay suggestion",
+      "words": ${wordsPerScene}
+    }
   ]
 }
-Types: "hook" for scene 1, "cta" for last scene, "main" for rest.`;
+Types: "hook" scene 1, "cta" last scene, "share" second-last, "main" for rest.`;
 
   try {
-    setProgress('p1fill', 40);
+    setProgress('p1fill', 35);
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
@@ -664,7 +774,7 @@ Types: "hook" for scene 1, "cta" for last scene, "main" for rest.`;
         model: 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.75,
-        max_tokens: 6000
+        max_tokens: 8000
       })
     });
     const data = await res.json();
@@ -679,10 +789,18 @@ Types: "hook" for scene 1, "cta" for last scene, "main" for rest.`;
     scenes = parsed.scenes;
     sceneImages = new Array(scenes.length).fill(null);
 
+    // Store meta for display
+    window.videoMeta = {
+      title: parsed.title,
+      description: parsed.description || '',
+      tags: parsed.tags || []
+    };
+
     setProgress('p1fill', 100);
-    setStatus('p1status', `✅ Script ready! ${scenes.length} scenes — 🎣 Hook + 🔔 CTA included!`, 'ok');
+    setStatus('p1status', `✅ Script ready! ${scenes.length} scenes • ~${totalWords} words • 🎣 Hook + 🔔 CTA`, 'ok');
     document.getElementById('scriptTitle').textContent = parsed.title;
     renderSceneList();
+    renderVideoMeta(parsed);
     document.getElementById('scriptContainer').style.display = 'block';
   } catch (e) {
     setStatus('p1status', '❌ Error: ' + e.message, 'err');
@@ -691,15 +809,39 @@ Types: "hook" for scene 1, "cta" for last scene, "main" for rest.`;
   document.getElementById('genScriptBtn').disabled = false;
 }
 
+function renderVideoMeta(parsed) {
+  let metaEl = document.getElementById('videoMetaBox');
+  if (!metaEl) {
+    metaEl = document.createElement('div');
+    metaEl.id = 'videoMetaBox';
+    metaEl.style.cssText = 'margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;';
+    document.getElementById('scriptContainer').appendChild(metaEl);
+  }
+  const tagsHtml = (parsed.tags || []).map(t =>
+    `<span style="background:var(--accent)22;color:var(--accent);padding:3px 10px;border-radius:20px;font-size:12px;">#${t}</span>`
+  ).join(' ');
+  metaEl.innerHTML = `
+    <div style="font-size:12px;color:var(--muted2);font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">📊 YouTube SEO Info</div>
+    <div style="font-size:13px;color:var(--text);margin-bottom:8px;"><b>Title:</b> ${parsed.title || '-'}</div>
+    <div style="font-size:13px;color:var(--muted2);margin-bottom:10px;"><b>Description:</b> ${parsed.description || '-'}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">${tagsHtml}</div>
+  `;
+}
+
 function renderSceneList() {
   const list = document.getElementById('sceneList');
   list.innerHTML = scenes.map((s) => {
-    const badge = s.type === 'hook' ? '🎣 HOOK' : s.type === 'cta' ? '🔔 CTA' : `SCENE ${s.scene}`;
-    const color = s.type === 'hook' ? '#ff6584' : s.type === 'cta' ? '#43e97b' : 'var(--accent)';
+    const badge = s.type === 'hook' ? '🎣 HOOK' : s.type === 'cta' ? '🔔 CTA' : s.type === 'share' ? '📤 SHARE' : `SCENE ${s.scene}`;
+    const color = s.type === 'hook' ? '#ff6584' : s.type === 'cta' ? '#43e97b' : s.type === 'share' ? '#ffd93d' : 'var(--accent)';
+    const wordCount = s.words || s.narration.split(' ').length;
     return `<div class="scene-item">
-      <div class="scene-label" style="color:${color}">${badge}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div class="scene-label" style="color:${color};margin-bottom:0">${badge}</div>
+        <span style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${wordCount} words</span>
+      </div>
       <div class="scene-text">${s.narration}</div>
-      <div class="scene-visual">🖼 Visual: ${s.visual}</div>
+      <div class="scene-visual" style="margin-top:4px;">🖼 <b>Visual:</b> ${s.visual}</div>
+      ${s.editing ? `<div class="scene-visual" style="color:#ffd93d44;margin-top:2px;">✂️ <b>Edit:</b> ${s.editing}</div>` : ''}
     </div>`;
   }).join('');
 }
