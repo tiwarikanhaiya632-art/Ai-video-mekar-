@@ -915,18 +915,39 @@ function selectImgStyle(el) {
   imgStyle = el.dataset.style;
 }
 
+async function loadImageWithRetry(url, retries = 3, timeoutMs = 30000) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const img = await new Promise((resolve, reject) => {
+        const image = new Image();
+        image.crossOrigin = 'anonymous';
+        const timer = setTimeout(() => reject(new Error('Timeout')), timeoutMs);
+        image.onload = () => { clearTimeout(timer); resolve(image); };
+        image.onerror = () => { clearTimeout(timer); reject(new Error('Load failed')); };
+        image.src = url;
+      });
+      return img;
+    } catch (e) {
+      if (attempt === retries) return null;
+      // Wait before retry: 2s, 4s
+      await new Promise(r => setTimeout(r, attempt * 2000));
+    }
+  }
+  return null;
+}
+
 async function generateImages() {
   if (!scenes.length) { toast('Pehle script generate karo!', 'err'); return; }
 
   const grid = document.getElementById('imgGrid');
-  sceneImages = [];
+  sceneImages = new Array(scenes.length).fill(null);
 
   // Init placeholders
   grid.innerHTML = scenes.map((s, i) => `
     <div class="img-card" id="imgCard${i}">
       <div class="img-placeholder">
         <div class="img-loading"></div>
-        <div>Scene ${s.scene}</div>
+        <div style="font-size:12px;margin-top:8px;">Scene ${s.scene}</div>
       </div>
       <div class="img-scene-label">SC${s.scene}</div>
     </div>`).join('');
@@ -934,44 +955,108 @@ async function generateImages() {
   document.getElementById('genImgBtn').disabled = true;
   document.getElementById('imgNextBtn').style.display = 'none';
 
+  let successCount = 0;
+  let failCount = 0;
+
+  // Process ONE AT A TIME with delay — avoids rate limit
   for (let i = 0; i < scenes.length; i++) {
     const pct = Math.round(((i + 1) / scenes.length) * 100);
     setProgress('p3fill', pct);
-    setStatus('p3status', `⏳ Scene ${i + 1}/${scenes.length} image generate ho rahi hai...`);
+    setStatus('p3status', `⏳ Scene ${i + 1}/${scenes.length} ban rahi hai... (${successCount} ready, ${failCount} failed)`);
+
+    // Mark current card as "generating"
+    const card = document.getElementById('imgCard' + i);
+    if (card) card.style.outline = '2px solid var(--accent)';
 
     try {
-      const prompt = encodeURIComponent(`${scenes[i].visual}, ${imgStyle}, high quality, no text, no watermark`);
-      const seed = Math.floor(Math.random() * 99999);
-      const url = `https://image.pollinations.ai/prompt/${prompt}?width=1280&height=720&seed=${seed}&nologo=true`;
+      const styleTag = imgStyle || 'cinematic, photorealistic';
+      const visualPrompt = scenes[i].visual || `scene ${i + 1}`;
+      const seed = Math.floor(Math.random() * 999999);
+      const promptText = encodeURIComponent(
+        `${visualPrompt}, ${styleTag}, high quality, professional, cinematic lighting, no text, no watermark, no logo`
+      );
+      const url = `https://image.pollinations.ai/prompt/${promptText}?width=1280&height=720&seed=${seed}&nologo=true&enhance=true`;
 
-      // Load image
-      await new Promise((resolve) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          sceneImages[i] = img;
-          const card = document.getElementById('imgCard' + i);
+      const img = await loadImageWithRetry(url, 3, 35000);
+
+      if (img) {
+        sceneImages[i] = img;
+        successCount++;
+        if (card) {
           card.innerHTML = `
-            <img src="${img.src}" alt="Scene ${i + 1}" />
-            <div class="img-scene-label">SC${scenes[i].scene}</div>`;
-          resolve();
-        };
-        img.onerror = () => {
-          sceneImages[i] = null;
-          resolve();
-        };
-        img.src = url;
-        setTimeout(resolve, 12000); // timeout
-      });
+            <img src="${img.src}" alt="Scene ${i + 1}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" />
+            <div class="img-scene-label">SC${scenes[i].scene}</div>
+            <div style="position:absolute;bottom:28px;right:6px;background:#43e97b;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;">✓</div>`;
+        }
+      } else {
+        failCount++;
+        if (card) {
+          card.innerHTML = `
+            <div class="img-placeholder" style="background:#ff658422;">
+              <div style="font-size:22px;">❌</div>
+              <div style="font-size:11px;margin-top:6px;">Scene ${s.scene} failed</div>
+              <button onclick="retrySingleImage(${i})" style="margin-top:8px;padding:4px 10px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:11px;cursor:pointer;">Retry</button>
+            </div>
+            <div class="img-scene-label">SC${s.scene}</div>`;
+        }
+      }
     } catch (e) {
+      failCount++;
       sceneImages[i] = null;
+    }
+
+    if (card) card.style.outline = 'none';
+
+    // 1 second gap between images — prevents rate limit
+    if (i < scenes.length - 1) {
+      await new Promise(r => setTimeout(r, 1000));
     }
   }
 
-  setStatus('p3status', '✅ Sari images ready!', 'ok');
+  const msg = failCount === 0
+    ? `✅ Saari ${successCount} images ready!`
+    : `⚠️ ${successCount} ready, ${failCount} failed — Retry button dabao unke liye`;
+  setStatus('p3status', msg, failCount === 0 ? 'ok' : 'warn');
   document.getElementById('genImgBtn').disabled = false;
   document.getElementById('imgNextBtn').style.display = 'flex';
-  toast('✅ Images generate ho gayi!', 'ok');
+  toast(failCount === 0 ? '✅ Saari images ban gayi!' : `⚠️ ${failCount} image fail hui — retry karo`, failCount === 0 ? 'ok' : 'err');
+}
+
+async function retrySingleImage(i) {
+  const card = document.getElementById('imgCard' + i);
+  if (!card) return;
+  card.innerHTML = `
+    <div class="img-placeholder">
+      <div class="img-loading"></div>
+      <div style="font-size:12px;margin-top:8px;">Retry Scene ${i + 1}...</div>
+    </div>
+    <div class="img-scene-label">SC${scenes[i].scene}</div>`;
+
+  const styleTag = imgStyle || 'cinematic, photorealistic';
+  const seed = Math.floor(Math.random() * 999999);
+  const promptText = encodeURIComponent(
+    `${scenes[i].visual}, ${styleTag}, high quality, cinematic, no text, no watermark`
+  );
+  const url = `https://image.pollinations.ai/prompt/${promptText}?width=1280&height=720&seed=${seed}&nologo=true`;
+  const img = await loadImageWithRetry(url, 3, 35000);
+
+  if (img) {
+    sceneImages[i] = img;
+    card.innerHTML = `
+      <img src="${img.src}" alt="Scene ${i + 1}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" />
+      <div class="img-scene-label">SC${scenes[i].scene}</div>
+      <div style="position:absolute;bottom:28px;right:6px;background:#43e97b;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;">✓</div>`;
+    toast(`✅ Scene ${i + 1} ready!`, 'ok');
+  } else {
+    card.innerHTML = `
+      <div class="img-placeholder" style="background:#ff658422;">
+        <div style="font-size:22px;">❌</div>
+        <div style="font-size:11px;margin-top:6px;">Scene ${i + 1} failed</div>
+        <button onclick="retrySingleImage(${i})" style="margin-top:8px;padding:4px 10px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:11px;cursor:pointer;">Retry Again</button>
+      </div>
+      <div class="img-scene-label">SC${scenes[i].scene}</div>`;
+    toast(`❌ Scene ${i + 1} phir fail hui`, 'err');
+  }
 }
 
 // ─── STEP 4: VIDEO ─────────────────────────────────────────────────────────
