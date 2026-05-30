@@ -647,8 +647,6 @@ let availableVoices = [];
 let imgStyle = 'digital art vibrant';
 let currentSpeech = null;
 
-updateApiBtnTop();
-
 // ─── API KEY ───────────────────────────────────────────────────────────────
 function showApiModal() {
   document.getElementById('apiKeyIn').value = API_KEY;
@@ -664,6 +662,7 @@ function saveKey() {
 }
 function updateApiBtnTop() {
   const b = document.getElementById('apiBtnTop');
+  if (!b) return;
   if (API_KEY) { b.textContent = '✅ API Connected'; b.className = 'api-btn ok'; }
   else { b.textContent = '⚙ Groq API Key'; b.className = 'api-btn'; }
 }
@@ -1433,6 +1432,12 @@ async function renderAndDownload(){
   }
   rf();
 }
+
+// ─── INIT ──────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  updateApiBtnTop();
+  goStep(1);
+});
 </script>
 </body>
 </html>
